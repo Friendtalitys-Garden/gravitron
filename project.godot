@@ -11,7 +11,8 @@ config_version=5
 [application]
 
 config/name="gravitron"
-config/features=PackedStringArray("4.4", "Forward Plus")
+run/main_scene="uid://cfeqoy7ck3ub5"
+config/features=PackedStringArray("4.4", "C#", "Forward Plus")
 config/icon="res://Sprites/icon.svg"
 
 [dotnet]
