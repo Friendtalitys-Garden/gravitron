@@ -1,8 +1,8 @@
 public abstract class GravityBody : PhysicsBody
 {
-    public double mass;
+	public double mass;
 
 
-    public Vector externalAcceleration;
-    public double externalAngularAcceleration;
+	public Vector externalAcceleration;
+	public double externalAngularAcceleration;
 }
