@@ -6,7 +6,7 @@ public class GravitySystem
 {
     public LinkedList<GravityBody> gravityBodies;
 
-    private Vector[] CalculateAccelerations(int i)
+    private Vector[] CalculateAccelerations(int n)
     {
         int size = gravityBodies.Count;
 
@@ -21,7 +21,7 @@ public class GravitySystem
             cur_b = cur_a.Next;
             for (int b = a + 1; b < size; b++)
             {
-                Vector diff = cur_b.Value.GetPosition(i) - cur_a.Value.GetPosition(i); // Vector from a to b
+                Vector diff = cur_b.Value.GetPosition(n) - cur_a.Value.GetPosition(n); // Vector from a to b
 
                 acceleration_matrix[a, b] = diff * 0.000000000066743d * Math.Pow(-1.5, diff * diff);
                 cur_b = cur_b.Next;
@@ -89,7 +89,6 @@ public class GravitySystem
         Vector[] accelerations = CalculateAccelerations(0);
 
         int i = 0;
-
         foreach (GravityBody gravityBody in gravityBodies)
         {
             gravityBody.SetPosition(1, gravityBody.GetVelocity(0));
