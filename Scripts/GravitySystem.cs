@@ -132,6 +132,8 @@ public class GravitySystem
         {
             gravityBody.SetPosition(0, gravityBody.GetPosition(0) + (gravityBody.GetPosition(1) + gravityBody.GetPosition(2) * 2d + gravityBody.GetPosition(3) * 2d + gravityBody.GetPosition(4)) * (dt / 6d));
             gravityBody.SetVelocity(0, gravityBody.GetVelocity(0) + (gravityBody.GetVelocity(1) + gravityBody.GetVelocity(2) * 2d + gravityBody.GetVelocity(3) * 2d + gravityBody.GetVelocity(4)) * (dt / 6d));
+            gravityBody.angle += gravityBody.angularVelocity;
+            gravityBody.angularVelocity += gravityBody.externalAngularAcceleration;
         }
     }
 }
