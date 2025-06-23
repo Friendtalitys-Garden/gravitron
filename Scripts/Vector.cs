@@ -1,5 +1,4 @@
-using System;
-using System.Numerics;
+using Godot;
 
 public struct Vector
 {
@@ -11,6 +10,11 @@ public struct Vector
 	{
 		this.x = x;
 		this.y = y;
+	}
+
+	public readonly Vector2 ToGodot()
+	{
+		return new Vector2((float)x, (float)y);
 	}
 
 	public static Vector operator +(Vector a, Vector b)

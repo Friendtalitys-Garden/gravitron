@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 public class GravitySystem
 {
     public LinkedList<GravityBody> gravityBodies;
+
+    public GravitySystem()
+    {
+        gravityBodies = new LinkedList<GravityBody>();
+    }
 
     private Vector[] CalculateAccelerations(int n)
     {
@@ -23,13 +27,14 @@ public class GravitySystem
             {
                 Vector diff = cur_b.Value.GetPosition(n) - cur_a.Value.GetPosition(n); // Vector from a to b
 
-                acceleration_matrix[a, b] = diff * 0.000000000066743d * Math.Pow(-1.5, diff * diff);
+                acceleration_matrix[a, b] = diff * (6.6743e-11d * Math.Pow(diff * diff, -1.5d));
+
                 cur_b = cur_b.Next;
             }
             cur_a = cur_a.Next;
         }
 
-        
+
 
         // Bottom left half of matrix (from b to a) by copying, multiplied by mass of a, inverted
         cur_a = gravityBodies.First;
@@ -79,61 +84,58 @@ public class GravitySystem
         return accelerations;
     }
 
-    private double[] GetAngularAccelerations()
-    {
-        return gravityBodies.Select(gravityBody => gravityBody.externalAngularAcceleration).ToArray();
-    }
-
     public void Update(double dt)
     {
-        Vector[] accelerations = CalculateAccelerations(0);
-
         int i = 0;
         foreach (GravityBody gravityBody in gravityBodies)
         {
-            gravityBody.SetPosition(1, gravityBody.GetVelocity(0));
-            gravityBody.SetVelocity(1, accelerations[i]);
+            gravityBody.SetPosition(1, gravityBody.GetPosition(0));
+            gravityBody.SetVelocity(1, gravityBody.GetVelocity(0));
 
-            i ++;
+            i++;
         }
 
         Vector[] accelerations_k1 = CalculateAccelerations(1);
         i = 0;
         foreach (GravityBody gravityBody in gravityBodies)
         {
-            gravityBody.SetPosition(2, gravityBody.GetVelocity(0) + gravityBody.GetVelocity(1) * 0.5d * dt);
-            gravityBody.SetVelocity(2, accelerations[i] + accelerations_k1[i] * 0.5d * dt);
+            gravityBody.SetPosition(2, gravityBody.GetPosition(0) + gravityBody.GetVelocity(1) * 0.5d * dt);
+            gravityBody.SetVelocity(2, gravityBody.GetVelocity(0) + accelerations_k1[i] * 0.5d * dt);
 
-            i ++;
+            i++;
         }
 
         Vector[] accelerations_k2 = CalculateAccelerations(2);
         i = 0;
         foreach (GravityBody gravityBody in gravityBodies)
         {
-            gravityBody.SetPosition(3, gravityBody.GetVelocity(0) + gravityBody.GetVelocity(2) * 0.5d * dt);
-            gravityBody.SetVelocity(3, accelerations[i] + accelerations_k2[i] * 0.5d * dt);
+            gravityBody.SetPosition(3, gravityBody.GetPosition(0) + gravityBody.GetVelocity(2) * 0.5d * dt);
+            gravityBody.SetVelocity(3, gravityBody.GetVelocity(0) + accelerations_k2[i] * 0.5d * dt);
 
-            i ++;
+            i++;
         }
 
         Vector[] accelerations_k3 = CalculateAccelerations(3);
         i = 0;
         foreach (GravityBody gravityBody in gravityBodies)
         {
-            gravityBody.SetPosition(4, gravityBody.GetVelocity(0) + gravityBody.GetVelocity(3) * dt);
-            gravityBody.SetVelocity(4, accelerations[i] + accelerations_k3[i] * dt);
+            gravityBody.SetPosition(4, gravityBody.GetPosition(0) + gravityBody.GetVelocity(3) * dt);
+            gravityBody.SetVelocity(4, gravityBody.GetVelocity(0) + accelerations_k3[i] * dt);
 
 
-            i ++;
+            i++;
         }
 
+        Vector[] accelerations_k4 = CalculateAccelerations(4);
+        i = 0;
         foreach (GravityBody gravityBody in gravityBodies)
         {
-            gravityBody.SetPosition(0, gravityBody.GetPosition(0) + (gravityBody.GetPosition(1) + gravityBody.GetPosition(2) * 2d + gravityBody.GetPosition(3) * 2d + gravityBody.GetPosition(4)) * (dt / 6d));
-            gravityBody.SetVelocity(0, gravityBody.GetVelocity(0) + (gravityBody.GetVelocity(1) + gravityBody.GetVelocity(2) * 2d + gravityBody.GetVelocity(3) * 2d + gravityBody.GetVelocity(4)) * (dt / 6d));
+            gravityBody.SetPosition(0, gravityBody.GetPosition(0) + (gravityBody.GetVelocity(1) + gravityBody.GetVelocity(2) * 2d + gravityBody.GetVelocity(3) * 2d + gravityBody.GetVelocity(4)) * (dt / 6d));
+            gravityBody.SetVelocity(0, gravityBody.GetVelocity(0) + (accelerations_k1[i] + accelerations_k2[i] * 2d + accelerations_k3[i] * 2d + accelerations_k4[i]) * (dt / 6d));
             gravityBody.angle += gravityBody.angularVelocity;
             gravityBody.angularVelocity += gravityBody.externalAngularAcceleration;
+
+            i++;
         }
     }
 }

@@ -17,29 +17,29 @@ public abstract class PhysicsBody
 
 	public Vector GetPosition(int i)
 	{
-        return i switch
-        {
-            0 => position,
-            1 => position_k1,
-            2 => position_k2,
-            3 => position_k3,
-            4 => position_k4,
-            _ => position,
-        };
-    }
+		return i switch
+		{
+			0 => position,
+			1 => position_k1,
+			2 => position_k2,
+			3 => position_k3,
+			4 => position_k4,
+			_ => position,
+		};
+	}
 
 	public Vector GetVelocity(int i)
 	{
-        return i switch
-        {
-            0 => velocity,
-            1 => velocity_k1,
-            2 => velocity_k2,
-            3 => velocity_k3,
-            4 => velocity_k4,
-            _ => velocity,
-        };
-    }
+		return i switch
+		{
+			0 => velocity,
+			1 => velocity_k1,
+			2 => velocity_k2,
+			3 => velocity_k3,
+			4 => velocity_k4,
+			_ => velocity,
+		};
+	}
 
 	public void SetPosition(int i, Vector p)
 	{
