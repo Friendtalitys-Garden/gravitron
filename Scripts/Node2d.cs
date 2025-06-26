@@ -2,6 +2,8 @@ using Godot;
 
 public partial class Node2d : Node2D
 {
+	private Texture2D gd;
+	
 	private Planet sun = new Planet()
 	{
 		mass = 1.989e30d,
@@ -21,6 +23,8 @@ public partial class Node2d : Node2D
 
 	public override void _Ready()
 	{
+		gd = (Texture2D)GD.Load<Texture2D>("res://Sprites/icon.svg");
+		
 		gravitySystem.gravityBodies.AddLast(sun);
 		gravitySystem.gravityBodies.AddLast(earth);
 
@@ -47,8 +51,8 @@ public partial class Node2d : Node2D
 	public override void _Draw()
 	{
 		Color color = new Color(1, 0, 0); // Red
-
-		DrawCircle((sun.position * 3e-9d).ToGodot(), 10f, color);
-		DrawCircle((earth.position * 3e-9d).ToGodot(), 10f, color);
+		
+		DrawTexture(gd, (sun.position * 3e-9d).ToGodot() - gd.GetSize() * 0.5f);
+		DrawTexture(gd, (earth.position * 3e-9d).ToGodot() - gd.GetSize() * 0.5f);
 	}
 }
