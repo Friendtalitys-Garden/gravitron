@@ -2,9 +2,11 @@ using Godot;
 
 public partial class Main : Node2D
 {
+	private Camera2D camera;
+
 	private Texture2D sunp;
 	private Texture2D earthp;
-	
+
 	private Planet sun = new Planet()
 	{
 		mass = 1.989e30d,
@@ -24,9 +26,14 @@ public partial class Main : Node2D
 
 	public override void _Ready()
 	{
+		camera = new Camera2D();
+		AddChild(camera);
+		camera.MakeCurrent();
+		camera.Position = (earth.position * 3e-9d).ToGodot();
+
 		sunp = (Texture2D)GD.Load<Texture2D>("res://Sprites/sun.png");
 		earthp = (Texture2D)GD.Load<Texture2D>("res://Sprites/earth.png");
-		
+
 		gravitySystem.gravityBodies.AddLast(sun);
 		gravitySystem.gravityBodies.AddLast(earth);
 
@@ -47,16 +54,18 @@ public partial class Main : Node2D
 		}
 
 		// Redraw every frame
+
+		camera.Position = (earth.position * 3e-9d).ToGodot();
 		QueueRedraw();
 	}
 
 	public override void _Draw()
 	{
 		Color color = new Color(1, 0, 0); // Red
-		
+
 		DrawTextureRect(sunp, new Rect2((sun.position * 3e-9d).ToGodot() - new Vector2(100f, 100f) * 0.5f, new Vector2(100f, 100f)), false);
 		DrawTextureRect(earthp, new Rect2((earth.position * 3e-9d).ToGodot() - new Vector2(50f, 50f) * 0.5f, new Vector2(50f, 50f)), false);
 	}
-	
+
 
 }
