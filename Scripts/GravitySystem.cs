@@ -5,9 +5,9 @@ public class GravitySystem
 {
     public LinkedList<GravityBody> gravityBodies;
 
-    public GravitySystem()
+    public GravitySystem(LinkedList<GravityBody> bodies)
     {
-        gravityBodies = new LinkedList<GravityBody>();
+        gravityBodies = bodies;
     }
 
     private Vector[] CalculateAccelerations(int n)

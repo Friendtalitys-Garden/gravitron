@@ -5,12 +5,14 @@ public abstract class PhysicsBody
 	public Vector position_k2;
 	public Vector position_k3;
 	public Vector position_k4;
+	public Vector position_save;
 
 	public Vector velocity;
 	public Vector velocity_k1;
 	public Vector velocity_k2;
 	public Vector velocity_k3;
 	public Vector velocity_k4;
+	public Vector velocity_save;
 
 	public double angle;
 	public double angularVelocity;
