@@ -6,7 +6,8 @@ public partial class Main : Node2D
 {
 	private LinkedList<GravityBody> gravityBodies;
 
-	private Texture2D gd;
+	private Texture2D sunp;
+	private Texture2D earthp;
 	
 	private Planet sun = new Planet()
 	{
@@ -27,7 +28,8 @@ public partial class Main : Node2D
 
 	public override void _Ready()
 	{
-		gd = (Texture2D)GD.Load<Texture2D>("res://Sprites/icon.svg");
+		sunp = (Texture2D)GD.Load<Texture2D>("res://Sprites/sun.png");
+		earthp = (Texture2D)GD.Load<Texture2D>("res://Sprites/earth.png");
 
 		gravityBodies = new LinkedList<GravityBody>();
 		
@@ -44,7 +46,6 @@ public partial class Main : Node2D
 	{
 		for (int step = 0; step < 100; step++)
 		{
-			bool st = earth.position.y < 0d;
 			gravitySystem.Update(100d);
 		}
 
@@ -54,11 +55,6 @@ public partial class Main : Node2D
 
 	public override void _Draw()
 	{
-		Color color = new Color(1, 0, 0); // Red
-		
-		DrawTexture(gd, (sun.position * 3e-9d).ToGodot() - gd.GetSize() * 0.5f);
-		DrawTexture(gd, (earth.position * 3e-9d).ToGodot() - gd.GetSize() * 0.5f);
-
 		// Orbit lines
 		int size = gravityBodies.Count;
 		Vector[,] positions = new Vector[size, 100];
@@ -98,5 +94,9 @@ public partial class Main : Node2D
 		}
 
 		DrawPolyline(polyLine, Colors.White, 5f);
+    
+    // Planets
+		DrawTextureRect(sunp, new Rect2((sun.position * 3e-9d).ToGodot() - new Vector2(100f, 100f) * 0.5f, new Vector2(100f, 100f)), false);
+		DrawTextureRect(earthp, new Rect2((earth.position * 3e-9d).ToGodot() - new Vector2(50f, 50f) * 0.5f, new Vector2(50f, 50f)), false);
 	}
 }
