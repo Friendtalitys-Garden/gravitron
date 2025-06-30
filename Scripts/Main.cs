@@ -58,7 +58,7 @@ public partial class Main : Node2D
 
 		// Redraw every frame
 
-		camera.Position = (earth.position * 3e-9d).ToGodot();
+		camera.Position = (sun.position * 3e-9d).ToGodot();
 		QueueRedraw();
 	}
 
