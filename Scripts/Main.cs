@@ -46,6 +46,7 @@ public partial class Main : Node2D
 		gravitySystem = new GravitySystem(gravityBodies);
 
 		// Trigger initial draw
+		RenderingServer.SetDefaultClearColor(new Color("#021631"));
 		QueueRedraw();
 	}
 

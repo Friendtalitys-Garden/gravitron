@@ -172,8 +172,8 @@ public partial class DatabaseConnection : Node2D
 			using NpgsqlCommand cmd = new NpgsqlCommand(@"
 			UPDATE rockets
 			SET x = @new_x,
-    			y = @new_y,
-    			velocity = @new_velocity,
+				y = @new_y,
+				velocity = @new_velocity,
 				mass = @new_mass
 			WHERE id = @condition;
 			", connection);
@@ -204,8 +204,8 @@ public partial class DatabaseConnection : Node2D
 			using NpgsqlCommand cmd = new NpgsqlCommand(@"
 			UPDATE planets
 			SET x = @new_x,
-    			y = @new_y,
-    			velocity = @new_velocity
+				y = @new_y,
+				velocity = @new_velocity
 			WHERE id = @condition;
 			", connection);
 
