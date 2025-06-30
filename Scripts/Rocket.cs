@@ -1,5 +1,8 @@
+using System;
+
 public class Rocket : GravityBody
 {
-    double width, height;
-    string sprite;
+	public Guid id;
+	public double width, height;
+	public string sprite;
 }
