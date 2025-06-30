@@ -1,6 +1,6 @@
 using Godot;
 
-public partial class Node2d : Node2D
+public partial class Main : Node2D
 {
 	private Texture2D sunp;
 	private Texture2D earthp;
