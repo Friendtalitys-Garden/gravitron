@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://crehn74vps1fj"
+
+[deps]
+
+files=["res://planets.name.translation", "res://planets.radius.translation", "res://planets.sprite.translation", "res://planets.x.translation", "res://planets.y.translation", "res://planets.vx.translation", "res://planets.vy.translation", "res://planets.mass.translation"]
+
+source_file="res://planets.csv"
+dest_files=["res://planets.name.translation", "res://planets.radius.translation", "res://planets.sprite.translation", "res://planets.x.translation", "res://planets.y.translation", "res://planets.vx.translation", "res://planets.vy.translation", "res://planets.mass.translation"]
+
+[params]
+
+compress=true
+delimiter=0

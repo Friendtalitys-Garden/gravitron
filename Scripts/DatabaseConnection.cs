@@ -12,8 +12,6 @@ public partial class DatabaseConnection
 		string dbPath = "mydatabase.db";
 		string fullPath = ProjectSettings.GlobalizePath(dbPath);
 
-		GD.Print($"SQLite DB Pfad: {fullPath}");
-
 		bool createTables = !System.IO.File.Exists(fullPath);
 		connection = new SqliteConnection($"Data Source={fullPath}");
 		connection.Open();
@@ -95,9 +93,9 @@ public partial class DatabaseConnection
 		cmd.ExecuteNonQuery();
 	}
 
-	public List<Rocket> ReadRockets()
+	public LinkedList<Rocket> ReadRockets()
 	{
-		List<Rocket> rockets = new();
+		LinkedList<Rocket> rockets = new();
 
 		using var cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM rockets";
@@ -117,15 +115,15 @@ public partial class DatabaseConnection
 				mass = Convert.ToDouble(reader["mass"])
 			};
 
-			rockets.Add(rocket);
+			rockets.AddLast(rocket);
 		}
 
 		return rockets;
 	}
 
-	public List<Planet> ReadPlanets()
+	public LinkedList<Planet> ReadPlanets()
 	{
-		List<Planet> planets = new();
+		LinkedList<Planet> planets = new();
 
 		using var cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM planets";
@@ -144,7 +142,7 @@ public partial class DatabaseConnection
 				mass = Convert.ToDouble(reader["mass"])
 			};
 
-			planets.Add(planet);
+			planets.AddLast(planet);
 		}
 
 		return planets;
