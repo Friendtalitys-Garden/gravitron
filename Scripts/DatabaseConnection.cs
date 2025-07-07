@@ -1,267 +1,207 @@
 using Godot;
 using System;
-using Npgsql;
-using System.Linq;
+using Microsoft.Data.Sqlite;
+using System.Collections.Generic;
 
-public partial class DatabaseConnection : Node2D
+public partial class DatabaseConnection
 {
-	NpgsqlConnection connection;
+	SqliteConnection connection;
 
-	public override void _Ready()
+	public void Setup()
 	{
-		string host = "localhost";
-		string port = "5431";
-		string database = "postgres";
-		string username = "postgres";
-		string password = "1234";
+		string dbPath = "mydatabase.db";
+		string fullPath = ProjectSettings.GlobalizePath(dbPath);
 
-		// SETUP
-		connection = Setup(host, port, database, username, password);
+		GD.Print($"SQLite DB Pfad: {fullPath}");
+
+		bool createTables = !System.IO.File.Exists(fullPath);
+		connection = new SqliteConnection($"Data Source={fullPath}");
+		connection.Open();
+
+		if (createTables)
+			CreateTables();
 	}
 
-	static NpgsqlConnection Setup(string host, string port, string database, string username, string password)
+	public void CreateTables()
 	{
-		string connectionString = $"Host={host};Port={port};Database={database};User Id={username};Password={password};";
-
-		try
-		{
-			using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-			connection.Open();
-
-			return connection;
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Connection Fehler: {ex.Message}");
-		}
-
-		return null;
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = @"
+			CREATE TABLE IF NOT EXISTS rockets (
+				id TEXT PRIMARY KEY,
+				name TEXT,
+				width REAL,
+				height REAL,
+				sprite TEXT,
+				x REAL,
+				y REAL,
+				velocity_x REAL,
+				velocity_y REAL,
+				mass REAL
+			);
+			CREATE TABLE IF NOT EXISTS planets (
+				id TEXT PRIMARY KEY,
+				name TEXT,
+				radius REAL,
+				sprite TEXT,
+				x REAL,
+				y REAL,
+				velocity_x REAL,
+				velocity_y REAL,
+				mass REAL
+			);";
+		cmd.ExecuteNonQuery();
 	}
 
-	void Insert(Rocket rocket)
+	public void Insert(Rocket rocket)
 	{
-		try
-		{
-			using NpgsqlCommand cmd = new NpgsqlCommand(@"
-			INSERT INTO rockets (id, width, height, sprite, x, y, velocity, mass) 
-			VALUES (@value1, @value2, @value3, @value4, @value5, @value6, @value7, @value8)
-			", connection);
-			cmd.Parameters.AddWithValue("@value1", Guid.NewGuid());
-			cmd.Parameters.AddWithValue("@value2", rocket.width);
-			cmd.Parameters.AddWithValue("@value3", rocket.height);
-			cmd.Parameters.AddWithValue("@value4", rocket.sprite);
-			cmd.Parameters.AddWithValue("@value5", rocket.position.x);
-			cmd.Parameters.AddWithValue("@value6", rocket.position.y);
-			cmd.Parameters.AddWithValue("@value7", rocket.velocity);
-			cmd.Parameters.AddWithValue("@value8", rocket.mass);
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = @"
+			INSERT INTO rockets (id, name, width, height, sprite, x, y, velocity_x, velocity_y, mass)
+			VALUES ($id, $name, $width, $height, $sprite, $x, $y, $vx, $vy, $mass);
+		";
 
-			int rowsAffected = cmd.ExecuteNonQuery();
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
-		}
-		catch (Exception ex)
-		{
-			GD.Print($"Fehler System: {ex.Message}");
-		}
+		cmd.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
+		cmd.Parameters.AddWithValue("$name", rocket.name);
+		cmd.Parameters.AddWithValue("$width", rocket.width);
+		cmd.Parameters.AddWithValue("$height", rocket.height);
+		cmd.Parameters.AddWithValue("$sprite", rocket.sprite);
+		cmd.Parameters.AddWithValue("$x", rocket.position.x);
+		cmd.Parameters.AddWithValue("$y", rocket.position.y);
+		cmd.Parameters.AddWithValue("$vx", rocket.velocity.x);
+		cmd.Parameters.AddWithValue("$vy", rocket.velocity.y);
+		cmd.Parameters.AddWithValue("$mass", rocket.mass);
+
+		cmd.ExecuteNonQuery();
 	}
 
-	void Insert(Planet planet)
+	public void Insert(Planet planet)
 	{
-		try
-		{
-			using NpgsqlCommand cmd = new NpgsqlCommand(@"
-			INSERT INTO planets (id, radius, sprite, x, y, velocity, mass) 
-			VALUES (@value1, @value2, @value3, @value4, @value5, @value6, @value7)
-			", connection);
-			cmd.Parameters.AddWithValue("@value1", Guid.NewGuid());
-			cmd.Parameters.AddWithValue("@value2", planet.radius);
-			cmd.Parameters.AddWithValue("@value3", planet.sprite);
-			cmd.Parameters.AddWithValue("@value4", planet.position.x);
-			cmd.Parameters.AddWithValue("@value5", planet.position.y);
-			cmd.Parameters.AddWithValue("@value6", planet.velocity);
-			cmd.Parameters.AddWithValue("@value7", planet.mass);
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = @"
+			INSERT INTO planets (id, name, radius, sprite, x, y, velocity_x, velocity_y, mass)
+			VALUES ($id, $name, $radius, $sprite, $x, $y, $vx, $vy, $mass);
+		";
 
-			int rowsAffected = cmd.ExecuteNonQuery();
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
-		}
-		catch (Exception ex)
-		{
-			GD.Print($"Fehler System: {ex.Message}");
-		}
+		cmd.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
+		cmd.Parameters.AddWithValue("$name", planet.name);
+		cmd.Parameters.AddWithValue("$radius", planet.radius);
+		cmd.Parameters.AddWithValue("$sprite", planet.sprite);
+		cmd.Parameters.AddWithValue("$x", planet.position.x);
+		cmd.Parameters.AddWithValue("$y", planet.position.y);
+		cmd.Parameters.AddWithValue("$vx", planet.velocity.x);
+		cmd.Parameters.AddWithValue("$vy", planet.velocity.y);
+		cmd.Parameters.AddWithValue("$mass", planet.mass);
+
+		cmd.ExecuteNonQuery();
 	}
 
-	Rocket[] ReadRockets()
+	public List<Rocket> ReadRockets()
 	{
-		Rocket[] rockets = [];
+		List<Rocket> rockets = new();
 
-		try
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = "SELECT * FROM rockets";
+		using var reader = cmd.ExecuteReader();
+
+		while (reader.Read())
 		{
-			using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM rockets", connection);
-			using NpgsqlDataReader reader = cmd.ExecuteReader();
-
-			while (reader.Read())
+			var rocket = new Rocket
 			{
-				Rocket rocket = new Rocket();
-				rocket.id = (Guid)reader["id"];
+				id = Guid.Parse(reader["id"].ToString()),
+				name = reader["name"].ToString(),
+				width = Convert.ToDouble(reader["width"]),
+				height = Convert.ToDouble(reader["height"]),
+				sprite = reader["sprite"].ToString(),
+				position = new Vector(Convert.ToDouble(reader["x"]), Convert.ToDouble(reader["y"])),
+				velocity = new Vector(Convert.ToDouble(reader["velocity_x"]), Convert.ToDouble(reader["velocity_y"])),
+				mass = Convert.ToDouble(reader["mass"])
+			};
 
-				rocket.width = (double)reader["width"];
-				rocket.height = (double)reader["height"];
-
-				rocket.sprite = (string)reader["sprite"];
-
-				rocket.position.x = (double)reader["x"];
-				rocket.position.y = (double)reader["y"];
-
-				rocket.velocity = (Vector)reader["velocity"];
-				rocket.mass = (double)reader["mass"];
-
-				_ = rockets.Append(rocket);
-			}
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
+			rockets.Add(rocket);
 		}
 
 		return rockets;
 	}
 
-	Planet[] ReadPlanets()
+	public List<Planet> ReadPlanets()
 	{
-		Planet[] planets = [];
+		List<Planet> planets = new();
 
-		try
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = "SELECT * FROM planets";
+		using var reader = cmd.ExecuteReader();
+
+		while (reader.Read())
 		{
-			using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM planets", connection);
-			using NpgsqlDataReader reader = cmd.ExecuteReader();
-
-			while (reader.Read())
+			var planet = new Planet
 			{
-				Planet planet = new Planet();
-				planet.id = (Guid)reader["id"];
+				id = Guid.Parse(reader["id"].ToString()),
+				name = reader["name"].ToString(),
+				radius = Convert.ToDouble(reader["radius"]),
+				sprite = reader["sprite"].ToString(),
+				position = new Vector(Convert.ToDouble(reader["x"]), Convert.ToDouble(reader["y"])),
+				velocity = new Vector(Convert.ToDouble(reader["velocity_x"]), Convert.ToDouble(reader["velocity_y"])),
+				mass = Convert.ToDouble(reader["mass"])
+			};
 
-				planet.radius = (double)reader["radius"];
-				planet.sprite = (string)reader["sprite"];
-
-				planet.position.x = (double)reader["x"];
-				planet.position.y = (double)reader["y"];
-
-				planet.velocity = (Vector)reader["velocity"];
-				planet.mass = (double)reader["mass"];
-
-				_ = planets.Append(planet);
-			}
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
+			planets.Add(planet);
 		}
 
 		return planets;
 	}
 
-	void Update(Rocket rocket)
+	public void Update(Rocket rocket)
 	{
-		try
-		{
-			using NpgsqlCommand cmd = new NpgsqlCommand(@"
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = @"
 			UPDATE rockets
-			SET x = @new_x,
-    			y = @new_y,
-    			velocity = @new_velocity,
-				mass = @new_mass
-			WHERE id = @condition;
-			", connection);
+			SET name = $name, x = $x, y = $y, velocity_x = $vx, velocity_y = $vy, mass = $mass
+			WHERE id = $id;
+		";
 
-			cmd.Parameters.AddWithValue("@condition", rocket.id);
+		cmd.Parameters.AddWithValue("$id", rocket.id.ToString());
+		cmd.Parameters.AddWithValue("$name", rocket.name);
+		cmd.Parameters.AddWithValue("$x", rocket.position.x);
+		cmd.Parameters.AddWithValue("$y", rocket.position.y);
+		cmd.Parameters.AddWithValue("$vx", rocket.velocity.x);
+		cmd.Parameters.AddWithValue("$vy", rocket.velocity.y);
+		cmd.Parameters.AddWithValue("$mass", rocket.mass);
 
-			cmd.Parameters.AddWithValue("@new_x", rocket.position.x);
-			cmd.Parameters.AddWithValue("@new_y", rocket.position.y);
-			cmd.Parameters.AddWithValue("@new_velocity", rocket.velocity);
-			cmd.Parameters.AddWithValue("@new_mass", rocket.mass);
-
-			int rowsAffected = cmd.ExecuteNonQuery();
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
-		}
-		catch (Exception ex)
-		{
-			GD.Print($"Fehler System: {ex.Message}");
-		}
+		cmd.ExecuteNonQuery();
 	}
 
-	void Update(Planet planet)
+	public void Update(Planet planet)
 	{
-		try
-		{
-			using NpgsqlCommand cmd = new NpgsqlCommand(@"
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = @"
 			UPDATE planets
-			SET x = @new_x,
-    			y = @new_y,
-    			velocity = @new_velocity
-			WHERE id = @condition;
-			", connection);
+			SET name = $name, x = $x, y = $y, velocity_x = $vx, velocity_y = $vy
+			WHERE id = $id;
+		";
 
-			cmd.Parameters.AddWithValue("@condition", planet.id);
+		cmd.Parameters.AddWithValue("$id", planet.id.ToString());
+		cmd.Parameters.AddWithValue("$name", planet.name);
+		cmd.Parameters.AddWithValue("$x", planet.position.x);
+		cmd.Parameters.AddWithValue("$y", planet.position.y);
+		cmd.Parameters.AddWithValue("$vx", planet.velocity.x);
+		cmd.Parameters.AddWithValue("$vy", planet.velocity.y);
 
-			cmd.Parameters.AddWithValue("@new_x", planet.position.x);
-			cmd.Parameters.AddWithValue("@new_y", planet.position.y);
-			cmd.Parameters.AddWithValue("@new_velocity", planet.velocity);
-
-			int rowsAffected = cmd.ExecuteNonQuery();
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
-		}
-		catch (Exception ex)
-		{
-			GD.Print($"Fehler System: {ex.Message}");
-		}
+		cmd.ExecuteNonQuery();
 	}
 
-	void Delete(Rocket rocket)
+	public void Delete(Rocket rocket)
 	{
-		try
-		{
-			using NpgsqlCommand cmd = new NpgsqlCommand("DELETE FROM rockets WHERE id = @condition", connection);
-			cmd.Parameters.AddWithValue("@condition", rocket.id);
-
-			int rowsAffected = cmd.ExecuteNonQuery();
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
-		}
-		catch (Exception ex)
-		{
-			GD.Print($"Fehler System: {ex.Message}");
-		}
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = "DELETE FROM rockets WHERE id = $id";
+		cmd.Parameters.AddWithValue("$id", rocket.id.ToString());
+		cmd.ExecuteNonQuery();
 	}
 
-	void Delete(Planet planet)
+	public void Delete(Planet planet)
 	{
-		try
-		{
-			using NpgsqlCommand cmd = new NpgsqlCommand("DELETE FROM planets WHERE id = @condition", connection);
-			cmd.Parameters.AddWithValue("@condition", planet.id);
-
-			int rowsAffected = cmd.ExecuteNonQuery();
-		}
-		catch (Npgsql.NpgsqlException ex)
-		{
-			GD.Print($"Fehler DB: {ex.Message}");
-		}
-		catch (Exception ex)
-		{
-			GD.Print($"Fehler System: {ex.Message}");
-		}
+		using var cmd = connection.CreateCommand();
+		cmd.CommandText = "DELETE FROM planets WHERE id = $id";
+		cmd.Parameters.AddWithValue("$id", planet.id.ToString());
+		cmd.ExecuteNonQuery();
 	}
 }
