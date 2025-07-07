@@ -1,68 +1,63 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Spatial;
+using System.Linq;
 
 public partial class Main : Node2D
 {
 	private Camera2D camera;
+	private double cameraScale = 1e-10d;
+	private GravityBody pointOfInterest;
+	private LinkedList<Planet> planets;
+	private LinkedList<Rocket> rockets;
 	private LinkedList<GravityBody> gravityBodies;
-
-
-	private Texture2D sunp;
-	private Texture2D earthp;
-
-	private Planet sun = new Planet()
-	{
-		mass = 1.989e30d,
-		radius = 6.9634e8d
-	};
-
-	private Planet earth = new Planet()
-	{
-		mass = 5.972e24d,
-		radius = 6.378e6d,
-
-		position = new Vector(1.5205e11d, 0d),
-		velocity = new Vector(0d, 29784.8d)
-	};
-
 	private GravitySystem gravitySystem;
+
+	private static Texture2D TryGetTexture(string name)
+	{
+		Texture2D texture = GD.Load<Texture2D>("res://Sprites/" + name);
+		// "Compund Assignment"
+		texture ??= GD.Load<Texture2D>("res://Sprites/icon.svg");
+
+		return texture;
+	}
 
 	public override void _Ready()
 	{
 		camera = new Camera2D();
 		AddChild(camera);
 		camera.MakeCurrent();
-		camera.Position = (earth.position * 3e-9d).ToGodot();
-
-		sunp = (Texture2D)GD.Load<Texture2D>("res://Sprites/sun.png");
-		earthp = (Texture2D)GD.Load<Texture2D>("res://Sprites/earth.png");
-
-		gravityBodies = new LinkedList<GravityBody>();
-
-		gravityBodies.AddLast(sun);
-		gravityBodies.AddLast(earth);
-
-		gravitySystem = new GravitySystem(gravityBodies);
-
-		// Trigger initial draw
-		QueueRedraw();
 
 		DatabaseConnection db = new();
 		db.Setup();
-		db.CreateTables();
+
+		gravityBodies = new LinkedList<GravityBody>();
+
+		planets = db.ReadPlanets();
+		foreach (var planet in planets)
+		{
+			planet.texture = TryGetTexture(planet.sprite);
+			gravityBodies.AddLast(planet);
+		}
+
+		rockets = db.ReadRockets();
+		foreach (var rocket in rockets) gravityBodies.AddLast(rocket);
+
+		gravitySystem = new GravitySystem(gravityBodies);
+		pointOfInterest = planets.FirstOrDefault(p => p.name == "Sun");
+
+		QueueRedraw();
 	}
 
 	public override void _Process(double delta)
 	{
 		for (int step = 0; step < 100; step++)
 		{
-			gravitySystem.Update(100d);
+			gravitySystem.Update(1000d);
 		}
-
-		// Redraw every frame
-
-		camera.Position = (sun.position * 3e-9d).ToGodot();
+		
+		camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
 		QueueRedraw();
 	}
 
@@ -81,8 +76,6 @@ public partial class Main : Node2D
 
 		for (int step = 0; step < 100; step++)
 		{
-			gravitySystem.Update(100000d);
-
 			i = 0;
 			foreach (GravityBody body in gravityBodies)
 			{
@@ -90,6 +83,8 @@ public partial class Main : Node2D
 
 				i++;
 			}
+			
+			gravitySystem.Update(100000d);
 		}
 
 		foreach (GravityBody body in gravityBodies)
@@ -98,18 +93,25 @@ public partial class Main : Node2D
 			body.velocity = body.velocity_save;
 		}
 
-		Vector2[] polyLine = new Vector2[100];
-
-
-		for (int step = 0; step < 100; step++)
+		for (i = 0; i < size; i++)
 		{
-			polyLine[step] = (positions[1, step] * 3e-9d).ToGodot();
+			Vector2[] polyLine = new Vector2[100];
+
+			for (int step = 0; step < 100; step++)
+			{
+				polyLine[step] = (positions[i, step] * cameraScale).ToGodot();
+			}
+
+			DrawPolyline(polyLine, Colors.White, 2f);
 		}
 
-		DrawPolyline(polyLine, Colors.White, 5f);
+		foreach (Planet planet in planets)
+		{
+			Vector radius = new(planet.radius, planet.radius);
 
-		// Planets
-		DrawTextureRect(sunp, new Rect2((sun.position * 3e-9d).ToGodot() - new Vector2(100f, 100f) * 0.5f, new Vector2(100f, 100f)), false);
-		DrawTextureRect(earthp, new Rect2((earth.position * 3e-9d).ToGodot() - new Vector2(50f, 50f) * 0.5f, new Vector2(50f, 50f)), false);
+			Font defaultFont = ThemeDB.FallbackFont;
+			DrawString(defaultFont, ((planet.position + radius) * cameraScale).ToGodot(), planet.name);
+			DrawTextureRect(planet.texture, new Rect2(((planet.position - radius) * cameraScale).ToGodot(), (radius * (cameraScale * 2.0d)).ToGodot()), false);
+		}
 	}
 }
