@@ -39,7 +39,7 @@ public partial class Main : Node2D
 		earthp = (Texture2D)GD.Load<Texture2D>("res://Sprites/earth.png");
 
 		gravityBodies = new LinkedList<GravityBody>();
-		
+
 		gravityBodies.AddLast(sun);
 		gravityBodies.AddLast(earth);
 
@@ -47,6 +47,10 @@ public partial class Main : Node2D
 
 		// Trigger initial draw
 		QueueRedraw();
+
+		DatabaseConnection db = new();
+		db.Setup();
+		db.CreateTables();
 	}
 
 	public override void _Process(double delta)
@@ -103,8 +107,8 @@ public partial class Main : Node2D
 		}
 
 		DrawPolyline(polyLine, Colors.White, 5f);
-    
-    // Planets
+
+		// Planets
 		DrawTextureRect(sunp, new Rect2((sun.position * 3e-9d).ToGodot() - new Vector2(100f, 100f) * 0.5f, new Vector2(100f, 100f)), false);
 		DrawTextureRect(earthp, new Rect2((earth.position * 3e-9d).ToGodot() - new Vector2(50f, 50f) * 0.5f, new Vector2(50f, 50f)), false);
 	}
