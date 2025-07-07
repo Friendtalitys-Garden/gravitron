@@ -25,7 +25,7 @@ public partial class Node2d : Node2D
 	public override void _Ready()
 	{
 		sunp = (Texture2D)GD.Load<Texture2D>("res://Sprites/sun.png");
-		earthp = (Texture2D)GD.Load<Texture2D>("res://Sprites/earth.png");
+		earthp = (Texture2D)GD.Load<Texture2D>("res://Sprites/Earthneu.png");
 		
 		gravitySystem.gravityBodies.AddLast(sun);
 		gravitySystem.gravityBodies.AddLast(earth);
