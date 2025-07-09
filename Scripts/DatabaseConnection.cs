@@ -98,7 +98,7 @@ public partial class DatabaseConnection
 		LinkedList<Rocket> rockets = new();
 
 		using var cmd = connection.CreateCommand();
-		cmd.CommandText = "SELECT * FROM rockets";
+		cmd.CommandText = "SELECT * FROM rockets ORDER BY mass DESC";
 		using var reader = cmd.ExecuteReader();
 
 		while (reader.Read())
@@ -126,7 +126,7 @@ public partial class DatabaseConnection
 		LinkedList<Planet> planets = new();
 
 		using var cmd = connection.CreateCommand();
-		cmd.CommandText = "SELECT * FROM planets";
+		cmd.CommandText = "SELECT * FROM planets ORDER BY mass DESC";
 		using var reader = cmd.ExecuteReader();
 
 		while (reader.Read())
