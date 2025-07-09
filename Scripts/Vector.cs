@@ -32,6 +32,11 @@ public struct Vector
 		return new Vector(v.x * d, v.y * d);
 	}
 
+	public static Vector operator /(Vector v, double d)
+	{
+		return new Vector(v.x / d, v.y / d);
+	}
+
 	public static double operator *(Vector a, Vector b)
 	{
 		return a.x * b.x + a.y * b.y;

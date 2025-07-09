@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity.Spatial;
 using System.Linq;
 
 public partial class Main : Node2D
@@ -16,10 +15,17 @@ public partial class Main : Node2D
 
 	private static Texture2D TryGetTexture(string name)
 	{
-		Texture2D texture = GD.Load<Texture2D>("res://Sprites/" + name);
-		// "Compund Assignment"
-		texture ??= GD.Load<Texture2D>("res://Sprites/icon.svg");
+		string path = "res://Sprites/" + name;
 
+		Texture2D texture;
+		if (ResourceLoader.Exists(path))
+		{
+			texture = ResourceLoader.Load<Texture2D>(path);
+		}
+		else
+		{
+			texture = ResourceLoader.Load<Texture2D>("res://Sprites/icon.svg");
+		}
 		return texture;
 	}
 
@@ -46,6 +52,8 @@ public partial class Main : Node2D
 
 		gravitySystem = new GravitySystem(gravityBodies);
 		pointOfInterest = planets.FirstOrDefault(p => p.name == "Sun");
+		
+		gravitySystem.CalculateSphereOfInfluences();
 
 		QueueRedraw();
 	}
@@ -61,57 +69,51 @@ public partial class Main : Node2D
 		QueueRedraw();
 	}
 
+	public void DrawOrbit(GravityBody body)
+	{
+		int halfResolution = 500;
+
+		Vector2[] positions = new Vector2[2 * halfResolution + 1];
+
+		double limit = Math.PI;
+		if (body.e > 1)
+		{
+			limit = Math.Acos(-1d / body.e);
+		}
+
+		for (int i = 0; i <= 2 * halfResolution; i++)
+		{
+			double trueAnomaly = limit * ((double)(i - halfResolution) / halfResolution);
+
+			double distance = body.a * (1d - body.e * body.e) / (1d + body.e * Math.Cos(trueAnomaly));
+
+			positions[i] = ((body.frameOfReference.position + new Vector(distance * Math.Cos(trueAnomaly + body.p), distance * Math.Sin(trueAnomaly + body.p))) * cameraScale).ToGodot();
+		}
+
+		DrawPolyline(positions, Colors.White, 2f);
+
+		if (body.isPrimary)
+		{
+			body.frameOfReference.position = (body.position * body.mass + body.binaryPartner.position * body.binaryPartner.mass) / (body.mass + body.binaryPartner.mass);
+			//camera.Position = (body.frameOfReference.position * cameraScale).ToGodot();
+			DrawOrbit(body.frameOfReference);
+		}
+	}
+
 	public override void _Draw()
 	{
-		// Orbit lines
-		int size = gravityBodies.Count;
-		Vector[,] positions = new Vector[size, 100];
-		int i;
-
-		foreach (GravityBody body in gravityBodies)
-		{
-			body.position_save = body.position;
-			body.velocity_save = body.velocity;
-		}
-
-		for (int step = 0; step < 100; step++)
-		{
-			i = 0;
-			foreach (GravityBody body in gravityBodies)
-			{
-				positions[i, step] = body.position;
-
-				i++;
-			}
-			
-			gravitySystem.Update(100000d);
-		}
-
-		foreach (GravityBody body in gravityBodies)
-		{
-			body.position = body.position_save;
-			body.velocity = body.velocity_save;
-		}
-
-		for (i = 0; i < size; i++)
-		{
-			Vector2[] polyLine = new Vector2[100];
-
-			for (int step = 0; step < 100; step++)
-			{
-				polyLine[step] = (positions[i, step] * cameraScale).ToGodot();
-			}
-
-			DrawPolyline(polyLine, Colors.White, 2f);
-		}
+		gravitySystem.CalculateSphereOfInfluences();
 
 		foreach (Planet planet in planets)
 		{
+			DrawOrbit(planet);
+
 			Vector radius = new(planet.radius, planet.radius);
 
-			Font defaultFont = ThemeDB.FallbackFont;
-			DrawString(defaultFont, ((planet.position + radius) * cameraScale).ToGodot(), planet.name);
+			DrawString(ThemeDB.FallbackFont, ((planet.position + radius) * cameraScale).ToGodot(), planet.name);
 			DrawTextureRect(planet.texture, new Rect2(((planet.position - radius) * cameraScale).ToGodot(), (radius * (cameraScale * 2.0d)).ToGodot()), false);
 		}
 	}
+	
+	
 }
