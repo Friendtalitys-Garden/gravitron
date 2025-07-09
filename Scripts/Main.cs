@@ -7,6 +7,8 @@ public partial class Main : Node2D
 {
 	private Camera2D camera;
 	private double cameraScale = 1e-10d;
+	private bool dragging = false;
+	private Vector2 dragPos;
 	private GravityBody pointOfInterest;
 	private LinkedList<Planet> planets;
 	private LinkedList<Rocket> rockets;
@@ -65,7 +67,7 @@ public partial class Main : Node2D
 			gravitySystem.Update(1000d);
 		}
 		
-		camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
+		//camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
 		QueueRedraw();
 	}
 
@@ -115,5 +117,41 @@ public partial class Main : Node2D
 		}
 	}
 	
-	
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (@event is InputEventMouseButton mb)
+		{
+			if (mb.ButtonIndex == MouseButton.Left)
+			{
+				if (mb.Pressed)
+				{
+					dragging = true;
+					dragPos = mb.Position;
+				}
+				else
+				{
+					dragging = false;
+				}
+			}
+			else if (mb.ButtonIndex == MouseButton.WheelUp)
+			{
+				cameraScale *= 1.1d;
+				camera.Position *= 1.1f;
+			}
+			else if (mb.ButtonIndex == MouseButton.WheelDown)
+			{
+				cameraScale /= 1.1d;
+				camera.Position /= 1.1f;
+			}
+		}
+		else if (@event is InputEventMouseMotion mm)
+		{
+			if (dragging)
+			{
+				Vector2 delta = mm.Position - dragPos;
+				camera.Position -= delta;
+				dragPos = mm.Position;
+			}
+		}
+	}
 }

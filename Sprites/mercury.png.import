@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvixmn8gug2sk"
-path="res://.godot/imported/Mercury.png-cac0956bcc663cbc560f99b22874c086.ctex"
+uid="uid://b10uwo3niyyia"
+path="res://.godot/imported/mercury.png-ee6a8f4b07061d8eec49a0f16ea4ad0f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Mercury.png"
-dest_files=["res://.godot/imported/Mercury.png-cac0956bcc663cbc560f99b22874c086.ctex"]
+source_file="res://Sprites/mercury.png"
+dest_files=["res://.godot/imported/mercury.png-ee6a8f4b07061d8eec49a0f16ea4ad0f.ctex"]
 
 [params]
 
