@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Godot;
-using SQLitePCL;
 
 public class GravitySystem
 {
