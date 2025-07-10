@@ -201,14 +201,17 @@ public class GravitySystem
 			Vector v = secondary.velocity - baryCenter.velocity;
 
 			// Gravitational Parameter
-			double gm = 6.6743e-11d * (primary.mass + secondary.mass);
+			double gm = 6.6743e-11d * baryCenter.mass;
 
 			// Specific mechanical energy
 			double sme = v * v * 0.5d - gm * id;
 
 			double a = -0.5d * gm / sme;
-			primary.a = a * secondary.mass / (primary.mass + secondary.mass);
-			secondary.a = a * primary.mass / (primary.mass + secondary.mass);
+			primary.a = a * secondary.mass / baryCenter.mass;
+			secondary.a = a * primary.mass / baryCenter.mass;
+
+			primary.sphereOfInfluence = primary.a * Math.Pow(primary.mass / baryCenter.mass, 0.4d);
+			secondary.sphereOfInfluence = secondary.a * Math.Pow(secondary.mass / baryCenter.mass, 0.4d);
 
 			double h = r.x * v.y - r.y * v.x;
 			primary.h = h;

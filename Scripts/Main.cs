@@ -15,6 +15,7 @@ public partial class Main : Node2D
 	private LinkedList<GravityBody> gravityBodies;
 	private GravitySystem gravitySystem;
 	private double simSpeed;
+	private Texture2D background;
 
 	private static Texture2D TryGetTexture(string name)
 	{
@@ -37,6 +38,8 @@ public partial class Main : Node2D
 		camera = new Camera2D();
 		AddChild(camera);
 		camera.MakeCurrent();
+
+		background = TryGetTexture("background.png");
 
 		DatabaseConnection db = new();
 		db.Setup();
@@ -94,8 +97,18 @@ public partial class Main : Node2D
 			positions[i] = ((body.frameOfReference.position + new Vector(distance * Math.Cos(trueAnomaly + body.p), distance * Math.Sin(trueAnomaly + body.p))) * cameraScale).ToGodot();
 		}
 
-		DrawPolyline(positions, Colors.White, 2f);
+		// Orbit line
+		DrawPolyline(positions, new Color(255f, 255f, 255f, 0.25f), 2f);
 
+		// Only draw sphere of influence if not binary primary or if secondary mass exceeds 10% of primary mass
+		if (!body.isPrimary || body.binaryPartner.mass / body.mass > 0.1d)
+		{
+			if (body.a != 0d) // Don't draw root bodies sphere of influence
+			{
+				DrawCircle((body.position * cameraScale).ToGodot(), (float)(body.sphereOfInfluence * cameraScale), new Color(255f, 255f, 255f, 0.1f));
+			}
+		}
+		
 		if (body.isPrimary)
 		{
 			body.frameOfReference.position = (body.position * body.mass + body.binaryPartner.position * body.binaryPartner.mass) / (body.mass + body.binaryPartner.mass);
@@ -106,15 +119,27 @@ public partial class Main : Node2D
 
 	public override void _Draw()
 	{
+		// Draw Background
+		Vector2 screenSize = GetViewportRect().Size;
+		Vector2 textureSize = background.GetSize();
+
+		Vector2 scaledSize = textureSize * Mathf.Max(screenSize.X / textureSize.X, screenSize.Y / textureSize.Y);
+
+		DrawTextureRect(background, new Rect2(camera.Position - scaledSize * 0.5f, scaledSize), false);
+
+		// Calculate orbit lines
 		gravitySystem.CalculateSphereOfInfluences();
 
 		foreach (Planet planet in planets)
 		{
+			// Draw orbit line + sphere of influence
 			DrawOrbit(planet);
 
 			Vector radius = new(planet.radius, planet.radius);
 
+			// Draw name
 			DrawString(ThemeDB.FallbackFont, ((planet.position + radius) * cameraScale).ToGodot(), planet.name);
+			// Draw planet
 			DrawTextureRect(planet.texture, new Rect2(((planet.position - radius) * cameraScale).ToGodot(), (radius * (cameraScale * 2.0d)).ToGodot()), false);
 		}
 	}
