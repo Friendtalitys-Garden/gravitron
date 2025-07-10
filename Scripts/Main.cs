@@ -15,7 +15,7 @@ public partial class Main : Node2D
 	private LinkedList<GravityBody> gravityBodies;
 	private GravitySystem gravitySystem;
 	private int simSpeedIndex;
-	private int simSpeed;
+	private long simSpeed;
 	private Texture2D background;
 
 	private static Texture2D TryGetTexture(string name)
@@ -59,7 +59,7 @@ public partial class Main : Node2D
 
 		gravitySystem = new GravitySystem(gravityBodies);
 		pointOfInterest = planets.FirstOrDefault(p => p.name == "Sun");
-		simSpeed = 1;
+		simSpeed = 1L;
 		simSpeedIndex = 0;
 		
 		gravitySystem.CalculateSphereOfInfluences();
@@ -148,9 +148,9 @@ public partial class Main : Node2D
 		DrawString(ThemeDB.FallbackFont, camera.Position - screenSize * 0.5f + new Vector2(0f, 16f), simSpeed + "x");
 	}
 
-	private int IntPow(int x, int pow)
+	private static long LongPow(long x, long pow)
 	{
-		int ret = 1;
+		long ret = 1;
 		while ( pow > 0 )
 		{
 			if ( (pow & 1) == 1 )
@@ -163,9 +163,9 @@ public partial class Main : Node2D
 
 	private void CalculateSimSpeed()
 	{
-		int[] simSpeeds = [1, 2, 5];
+		long[] simSpeeds = [1L, 2L, 5L];
 
-		simSpeed = simSpeeds[simSpeedIndex % 3] * IntPow(10, simSpeedIndex / 3);
+		simSpeed = simSpeeds[simSpeedIndex % 3L] * LongPow(10L, simSpeedIndex / 3L);
 	}
 	
 	public override void _UnhandledInput(InputEvent @event)
