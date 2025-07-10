@@ -14,6 +14,7 @@ public partial class Main : Node2D
 	private LinkedList<Rocket> rockets;
 	private LinkedList<GravityBody> gravityBodies;
 	private GravitySystem gravitySystem;
+	private double simSpeed;
 
 	private static Texture2D TryGetTexture(string name)
 	{
@@ -54,6 +55,7 @@ public partial class Main : Node2D
 
 		gravitySystem = new GravitySystem(gravityBodies);
 		pointOfInterest = planets.FirstOrDefault(p => p.name == "Sun");
+		simSpeed = 1000d;
 		
 		gravitySystem.CalculateSphereOfInfluences();
 
@@ -64,7 +66,7 @@ public partial class Main : Node2D
 	{
 		for (int step = 0; step < 100; step++)
 		{
-			gravitySystem.Update(1000d);
+			gravitySystem.Update(simSpeed);
 		}
 		
 		//camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
@@ -152,6 +154,27 @@ public partial class Main : Node2D
 				camera.Position -= delta;
 				dragPos = mm.Position;
 			}
+		}else if (@event is InputEventKey keyEvent && keyEvent.Pressed)
+		{
+			switch (keyEvent.Keycode)
+			{
+				case(Key.Plus):
+				if(keyEvent.CtrlPressed){
+					simSpeed *= 2d;
+				}else{
+					cameraScale *= 1.2d;
+					camera.Position *= 1.2f;
+				}
+				break;
+				case(Key.Minus):
+				if(keyEvent.CtrlPressed){
+					simSpeed /= 2d;
+				}else{
+					cameraScale /= 1.2d;
+					camera.Position /= 1.2f;
+				}
+				break;
+			};
 		}
 	}
 }
