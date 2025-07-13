@@ -129,6 +129,8 @@ public partial class Main : Node2D
 		Vector2 scaledSize = textureSize * Mathf.Max(screenSize.X / textureSize.X, screenSize.Y / textureSize.Y);
 
 		DrawTextureRect(background, new Rect2(camera.Position - scaledSize * 0.5f, scaledSize), false);
+		DrawTextureRect(background, new Rect2(camera.Position - scaledSize * 0.5f, scaledSize), false, new Color(0f,0f,0f,0.25f));
+
 
 		// Calculate orbit lines
 		gravitySystem.CalculateSphereOfInfluences();
@@ -153,6 +155,7 @@ public partial class Main : Node2D
 		{
 			Vector2 screenSize = GetViewportRect().Size;
 			Vector2 cursorPosition = new Vector2(mb.Position.X - screenSize.X / 2, mb.Position.Y - screenSize.Y / 2);
+			Vector2 storedCam = camera.Position;
 			if (mb.ButtonIndex == MouseButton.Left)
 			{
 				if (mb.Pressed)
@@ -163,9 +166,7 @@ public partial class Main : Node2D
 						Rect2 boundingBox = new Rect2((((planet.position - radius) * cameraScale).ToGodot() - camera.GlobalPosition), (radius * (cameraScale * 2.0d)).ToGodot());
 						if(boundingBox.HasPoint(cursorPosition)){
 							pointOfInterest = planet;
-							//GD.Print((((planet.position - radius) * cameraScale).ToGodot() - camera.GlobalPosition) + "   " + planet.name);
 						}
-	
 					}
 					dragging = true;
 					dragPos = mb.Position;
@@ -177,14 +178,18 @@ public partial class Main : Node2D
 			}
 			else if (mb.ButtonIndex == MouseButton.WheelUp)
 			{
+				double camScale = cameraScale / 1.1d;
 				cameraScale *= 1.1d;
-				camera.Position *= 1.1f;
+				//camera.Position *= 1.1f;
+				camera.Position = ((storedCam / (float)(cameraScale/1e-10d / 1.1)) - (cursorPosition / (float)(camScale/1e-10d) * (1 -1.1f))) * (float)(cameraScale / 1e-10d);
 			}
 			else if (mb.ButtonIndex == MouseButton.WheelDown)
 			{
 				cameraScale /= 1.1d;
-				camera.Position /= 1.1f;
+				//camera.Position /= 1.1f;
+				camera.Position = ((storedCam / (float)(cameraScale/1e-10d * 1.1)) - (cursorPosition / (float)(cameraScale/1e-10d) * (1 - 1f / 1.1f))) * (float)(cameraScale / 1e-10d);
 			}
+			GD.Print(camera.Position / (float)(cameraScale/1e-10d));
 		}
 		else if (@event is InputEventMouseMotion mm)
 		{
