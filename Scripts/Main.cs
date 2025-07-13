@@ -161,6 +161,7 @@ public partial class Main : Node2D
 				if (mb.Pressed)
 				{
 					pointOfInterest = null;
+					// Cheks for clicks on Planets
 					foreach (Planet planet in planets){
 						Vector radius = new(planet.radius, planet.radius);
 						Rect2 boundingBox = new Rect2((((planet.position - radius) * cameraScale).ToGodot() - camera.GlobalPosition), (radius * (cameraScale * 2.0d)).ToGodot());
@@ -178,18 +179,14 @@ public partial class Main : Node2D
 			}
 			else if (mb.ButtonIndex == MouseButton.WheelUp)
 			{
-				double camScale = cameraScale / 1.1d;
 				cameraScale *= 1.1d;
-				//camera.Position *= 1.1f;
-				camera.Position = ((storedCam / (float)(cameraScale/1e-10d / 1.1)) - (cursorPosition / (float)(camScale/1e-10d) * (1 -1.1f))) * (float)(cameraScale / 1e-10d);
+				camera.Position = ((storedCam / (float)(cameraScale/1e-10d / 1.1)) - (cursorPosition / (float)(cameraScale/1e-10d) * (1 -1.1f))) * (float)(cameraScale / 1e-10d);
 			}
 			else if (mb.ButtonIndex == MouseButton.WheelDown)
 			{
 				cameraScale /= 1.1d;
-				//camera.Position /= 1.1f;
 				camera.Position = ((storedCam / (float)(cameraScale/1e-10d * 1.1)) - (cursorPosition / (float)(cameraScale/1e-10d) * (1 - 1f / 1.1f))) * (float)(cameraScale / 1e-10d);
 			}
-			GD.Print(camera.Position / (float)(cameraScale/1e-10d));
 		}
 		else if (@event is InputEventMouseMotion mm)
 		{
