@@ -6,8 +6,8 @@ Gravitron is a small project simulating the Solar System.
 ### Controls
 RMB | Select/Deselect Planet \
 RMB | Move Camera \
-WheelUp Zoom In \
-WheelDown Zoom Out \
+WheelUp |  Zoom In \
+WheelDown | Zoom Out \
 \+ | Zoom In \
 \- | Zoom Out \
 Ctrl + + | Speed Simulation up \
