@@ -8,8 +8,9 @@ public partial class Main : Node2D
 	private Camera2D camera;
 	private double cameraScale = 1e-10d;
 	private bool dragging = false;
+	private bool paused = false;
 	private Vector2 dragPos;
-	private GravityBody pointOfInterest;
+	private GravityBody pointOfInterest = null;
 	private LinkedList<Planet> planets;
 	private LinkedList<Rocket> rockets;
 	private LinkedList<GravityBody> gravityBodies;
@@ -57,7 +58,6 @@ public partial class Main : Node2D
 		foreach (var rocket in rockets) gravityBodies.AddLast(rocket);
 
 		gravitySystem = new GravitySystem(gravityBodies);
-		pointOfInterest = planets.FirstOrDefault(p => p.name == "Sun");
 		simSpeed = 1000d;
 		
 		gravitySystem.CalculateSphereOfInfluences();
@@ -67,12 +67,15 @@ public partial class Main : Node2D
 
 	public override void _Process(double delta)
 	{
-		for (int step = 0; step < 100; step++)
-		{
-			gravitySystem.Update(simSpeed);
+		if(!paused){
+			for (int step = 0; step < 100; step++){
+				gravitySystem.Update(simSpeed);
+			}
 		}
-		
-		//camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
+		if(pointOfInterest != null){
+		camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
+		}
+
 		QueueRedraw();
 	}
 
@@ -148,10 +151,22 @@ public partial class Main : Node2D
 	{
 		if (@event is InputEventMouseButton mb)
 		{
+			Vector2 screenSize = GetViewportRect().Size;
+			Vector2 cursorPosition = new Vector2(mb.Position.X - screenSize.X / 2, mb.Position.Y - screenSize.Y / 2);
 			if (mb.ButtonIndex == MouseButton.Left)
 			{
 				if (mb.Pressed)
 				{
+					pointOfInterest = null;
+					foreach (Planet planet in planets){
+						Vector radius = new(planet.radius, planet.radius);
+						Rect2 boundingBox = new Rect2((((planet.position - radius) * cameraScale).ToGodot() - camera.GlobalPosition), (radius * (cameraScale * 2.0d)).ToGodot());
+						if(boundingBox.HasPoint(cursorPosition)){
+							pointOfInterest = planet;
+							//GD.Print((((planet.position - radius) * cameraScale).ToGodot() - camera.GlobalPosition) + "   " + planet.name);
+						}
+	
+					}
 					dragging = true;
 					dragPos = mb.Position;
 				}
@@ -198,6 +213,12 @@ public partial class Main : Node2D
 					cameraScale /= 1.2d;
 					camera.Position /= 1.2f;
 				}
+				break;
+				case(Key.Shift):
+				pointOfInterest = null;
+				break;
+				case(Key.Space):
+				paused = !paused;
 				break;
 			};
 		}
