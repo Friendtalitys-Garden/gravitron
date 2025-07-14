@@ -15,7 +15,8 @@ public partial class Main : Node2D
 	private LinkedList<Rocket> rockets;
 	private LinkedList<GravityBody> gravityBodies;
 	private GravitySystem gravitySystem;
-	private double simSpeed;
+	private int simSpeedIndex;
+	private long simSpeed;
 	private Texture2D background;
 
 	private static Texture2D TryGetTexture(string name)
@@ -58,7 +59,9 @@ public partial class Main : Node2D
 		foreach (var rocket in rockets) gravityBodies.AddLast(rocket);
 
 		gravitySystem = new GravitySystem(gravityBodies);
-		simSpeed = 1000d;
+		pointOfInterest = planets.FirstOrDefault(p => p.name == "Sun");
+		simSpeed = 1L;
+		simSpeedIndex = 0;
 		
 		gravitySystem.CalculateSphereOfInfluences();
 
@@ -69,7 +72,7 @@ public partial class Main : Node2D
 	{
 		if(!paused){
 			for (int step = 0; step < 100; step++){
-				gravitySystem.Update(simSpeed);
+				gravitySystem.Update(delta * simSpeed * 0.01d);
 			}
 		}
 		if(pointOfInterest != null){
@@ -147,6 +150,28 @@ public partial class Main : Node2D
 			// Draw planet
 			DrawTextureRect(planet.texture, new Rect2(((planet.position - radius) * cameraScale).ToGodot(), (radius * (cameraScale * 2.0d)).ToGodot()), false);
 		}
+
+		DrawString(ThemeDB.FallbackFont, camera.Position - screenSize * 0.5f + new Vector2(0f, 16f), simSpeed + "x");
+	}
+
+	private static long LongPow(long x, long pow)
+	{
+		long ret = 1;
+		while ( pow > 0 )
+		{
+			if ( (pow & 1) == 1 )
+				ret *= x;
+			x *= x;
+			pow >>= 1;
+		}
+		return ret;
+	}
+
+	private void CalculateSimSpeed()
+	{
+		long[] simSpeeds = [1L, 2L, 5L];
+
+		simSpeed = simSpeeds[simSpeedIndex % 3L] * LongPow(10L, simSpeedIndex / 3L);
 	}
 	
 	public override void _UnhandledInput(InputEvent @event)
@@ -201,20 +226,30 @@ public partial class Main : Node2D
 			switch (keyEvent.Keycode)
 			{
 				case(Key.Plus):
-				if(keyEvent.CtrlPressed){
-					simSpeed *= 2d;
-				}else{
-					cameraScale *= 1.2d;
-					camera.Position *= 1.2f;
-				}
-				break;
+					if(keyEvent.CtrlPressed)
+					{
+						simSpeedIndex += 1;
+					}
+					else
+					{
+						cameraScale *= 1.2d;
+						camera.Position *= 1.2f;
+					}
+					break;
 				case(Key.Minus):
-				if(keyEvent.CtrlPressed){
-					simSpeed /= 2d;
-				}else{
-					cameraScale /= 1.2d;
-					camera.Position /= 1.2f;
-				}
+					if(keyEvent.CtrlPressed)
+					{
+						simSpeedIndex -= 1;
+						if (simSpeedIndex < 0)
+						{
+							simSpeedIndex = 0;
+						}
+					}
+					else
+					{
+						cameraScale /= 1.2d;
+						camera.Position /= 1.2f;
+					}
 				break;
 				case(Key.Shift):
 				pointOfInterest = null;
@@ -223,6 +258,8 @@ public partial class Main : Node2D
 				paused = !paused;
 				break;
 			};
+
+			CalculateSimSpeed();
 		}
 	}
 }
