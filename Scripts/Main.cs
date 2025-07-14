@@ -8,8 +8,9 @@ public partial class Main : Node2D
 	private Camera2D camera;
 	private double cameraScale = 1e-10d;
 	private bool dragging = false;
+	private bool paused = false;
 	private Vector2 dragPos;
-	private GravityBody pointOfInterest;
+	private GravityBody pointOfInterest = null;
 	private LinkedList<Planet> planets;
 	private LinkedList<Rocket> rockets;
 	private LinkedList<GravityBody> gravityBodies;
@@ -69,12 +70,15 @@ public partial class Main : Node2D
 
 	public override void _Process(double delta)
 	{
-		for (int step = 0; step < 100; step++)
-		{
-			gravitySystem.Update(delta * simSpeed * 0.01d);
+		if(!paused){
+			for (int step = 0; step < 100; step++){
+				gravitySystem.Update(delta * simSpeed * 0.01d);
+			}
 		}
-		
-		//camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
+		if(pointOfInterest != null){
+		camera.Position = (pointOfInterest.position * cameraScale).ToGodot();
+		}
+
 		QueueRedraw();
 	}
 
@@ -128,6 +132,8 @@ public partial class Main : Node2D
 		Vector2 scaledSize = textureSize * Mathf.Max(screenSize.X / textureSize.X, screenSize.Y / textureSize.Y);
 
 		DrawTextureRect(background, new Rect2(camera.Position - scaledSize * 0.5f, scaledSize), false);
+		DrawTextureRect(background, new Rect2(camera.Position - scaledSize * 0.5f, scaledSize), false, new Color(0f,0f,0f,0.25f));
+
 
 		// Calculate orbit lines
 		gravitySystem.CalculateSphereOfInfluences();
@@ -172,10 +178,22 @@ public partial class Main : Node2D
 	{
 		if (@event is InputEventMouseButton mb)
 		{
+			Vector2 screenSize = GetViewportRect().Size;
+			Vector2 cursorPosition = new Vector2(mb.Position.X - screenSize.X / 2, mb.Position.Y - screenSize.Y / 2);
+			Vector2 storedCam = camera.Position;
 			if (mb.ButtonIndex == MouseButton.Left)
 			{
 				if (mb.Pressed)
 				{
+					pointOfInterest = null;
+					// Cheks for clicks on Planets
+					foreach (Planet planet in planets){
+						Vector radius = new(planet.radius, planet.radius);
+						Rect2 boundingBox = new Rect2((((planet.position - radius) * cameraScale).ToGodot() - camera.GlobalPosition), (radius * (cameraScale * 2.0d)).ToGodot());
+						if(boundingBox.HasPoint(cursorPosition)){
+							pointOfInterest = planet;
+						}
+					}
 					dragging = true;
 					dragPos = mb.Position;
 				}
@@ -187,12 +205,12 @@ public partial class Main : Node2D
 			else if (mb.ButtonIndex == MouseButton.WheelUp)
 			{
 				cameraScale *= 1.1d;
-				camera.Position *= 1.1f;
+				camera.Position = ((storedCam / (float)(cameraScale/1e-10d / 1.1)) - (cursorPosition / (float)(cameraScale/1e-10d) * (1 -1.1f))) * (float)(cameraScale / 1e-10d);
 			}
 			else if (mb.ButtonIndex == MouseButton.WheelDown)
 			{
 				cameraScale /= 1.1d;
-				camera.Position /= 1.1f;
+				camera.Position = ((storedCam / (float)(cameraScale/1e-10d * 1.1)) - (cursorPosition / (float)(cameraScale/1e-10d) * (1 - 1f / 1.1f))) * (float)(cameraScale / 1e-10d);
 			}
 		}
 		else if (@event is InputEventMouseMotion mm)
@@ -232,6 +250,12 @@ public partial class Main : Node2D
 						cameraScale /= 1.2d;
 						camera.Position /= 1.2f;
 					}
+				break;
+				case(Key.Shift):
+				pointOfInterest = null;
+				break;
+				case(Key.Space):
+				paused = !paused;
 				break;
 			};
 
